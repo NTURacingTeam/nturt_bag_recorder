@@ -1,6 +1,0 @@
-<launch>
-    <node pkg="nturt_bag_record" name="nturt_bag_record" type="nturt_bag_record.py">
-        <param name="record_script" value="$(find nturt_bag_record)/scripts/nturt_bag_record.sh"/>
-        <param name="record_folder" value="$(find nturt_bag_record)/bags"/>
-    </node>
-</launch>

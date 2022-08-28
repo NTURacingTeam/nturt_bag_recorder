@@ -1,1 +1,3 @@
-# NTURT bag record
+# NTURT bag recorder
+
+todo
