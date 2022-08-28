@@ -3,11 +3,12 @@ project(nturt_bag_recorder)
 
 find_package(catkin REQUIRED
         rospy
-        std_msgs
 )
 
 catkin_package(
-
+        INCLUDE_DIRS
+        LIBRARIES
+        CATKIN_DEPENDS rospy
 )
 
 include_directories(

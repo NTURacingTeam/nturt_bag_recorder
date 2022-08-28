@@ -2,11 +2,16 @@
 <package format="2">
     <name>nturt_bag_recorder</name>
     <version>0.0.0</version>
-    <description>ROS package for record all ros message into a bag when launch.</description>
+    <description>ROS package for recording ros message into a bag when launch.</description>
     <maintainer email="jet22854111@gmail.com">quantumspawner</maintainer>
     <author email="jet22854111@gmail.com">quantumspawner</author>
     <license>TODO</license>
 
-    <!-- build dependency -->
+    <!-- build dependencies -->
     <buildtool_depend>catkin</buildtool_depend>
+    <build_depend>rospy</build_depend>
+    <build_export_depend>rospy</build_export_depend>
+    
+    <!-- execute dependencies -->
+    <exec_depend>rospy</exec_depend>
 </package>
