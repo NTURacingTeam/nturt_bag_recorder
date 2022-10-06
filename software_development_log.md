@@ -16,7 +16,7 @@
 
 Record all ros messages from all topics for using in analysis in the future. Since ros does not provide a node for recording bags, a python wrapper to run `rosbag record -a` command is implemented here.
 
-## Programe structure:
+## Program structure:
 
 Using python `subprocess` package to run `rosbag record -a` command to record a bag. And stop the command when shutdown.
 
@@ -26,6 +26,7 @@ Using python `subprocess` package to run `rosbag record -a` command to record a 
 
 ## Testing environment:
 
+- bash 5.0.17(1)-release (x86_64-pc-linux-gnu)
 - ROS noetic
 
 ##### Testing hardware:
