@@ -4,7 +4,7 @@
 ##### Person in charge: 羅紀翔
 ##### Authors: 羅紀翔
 ##### Subsystem: RPI
-##### Subsystem number: RP2
+##### Subsystem number: RP4
 ##### Software name: bag_recorder
 ##### Repository: [github](https://github.com/NTURacingTeam/nturt_bag_recorder.git)
 ##### Started designing date: 2022/8/17
