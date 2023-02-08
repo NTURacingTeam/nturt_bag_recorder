@@ -2,8 +2,7 @@
 
 ## Introduction
 
-ROS provides a command `rosbag record -a` to record all messages from all topics. Yet it don't provide a node that does this job.
-This ros package `nturt_bag_recorder` provide a node that can de used to record all messages when run.
+ROS2 provides a command `ros2 bag record` to record messages from topics. And it in terms create `ros2bage_record` node for hendling it. However, the configuration isn't that easy to setup. Hence in this package, a node is provided to wrap around it and no extra configuration is needed.
 
 ## Usage
 
@@ -12,12 +11,7 @@ This ros package `nturt_bag_recorder` provide a node that can de used to record 
 You can run this node by
 
 ```shell=
-roslaunch nturt_bag_recorder nturt_bag_recorder.launch
+ros2 run nturt_bag_recorder nturt_bag_recorder_node
 ```
 
-The recorded bags will appear in `bags/` directory, and the name of the bag is the time when the bag is recorded.
-
-### Configuring the node
-
-Ypu may custom the record scripts and the directory where the bags will appear in the launch file `nturt_ros_bag_recorder.launch` in `launch/`.
-Currently, those are set to `scripts/nturt_bag_recorder.sh` and `bags/` respectively.
+The recorded bags will appear in `bags/` directory of this package's shared directory, and the name of the bag is the time when the bag is recorded.

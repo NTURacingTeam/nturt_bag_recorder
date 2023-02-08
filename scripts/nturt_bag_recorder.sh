@@ -1,7 +1,9 @@
 #!/bin/bash
 
+set -e
+
 # the name of the bag is the timestemp when the bag is recorded
-BAG_NAME="$(date +'%d-%m-%Y_%Ih%Mm%S')"
+BAG_NAME="$(date +'%Y-%m-%d-%I-%M-%S')"
 
 # start recording the bag
-rosbag record -O ${BAG_NAME} /received_messages /sent_messages /GPS_fix
+ros2 bag record -o ${BAG_NAME} /from_can_bus

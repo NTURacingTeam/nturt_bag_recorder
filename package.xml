@@ -1,17 +1,24 @@
 <?xml version="1.0"?>
-<package format="2">
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
     <name>nturt_bag_recorder</name>
     <version>0.0.0</version>
-    <description>ROS package for recording ros message into a bag when launch.</description>
-    <maintainer email="jet22854111@gmail.com">quantumspawner</maintainer>
+    <description>ROS2 package for recording ros message into a bag.</description>
+    <maintainer email="jet22854111@gmail.com">docker</maintainer>
     <author email="jet22854111@gmail.com">quantumspawner</author>
     <license>TODO</license>
 
-    <!-- build dependencies -->
-    <buildtool_depend>catkin</buildtool_depend>
-    <build_depend>rospy</build_depend>
-    <build_export_depend>rospy</build_export_depend>
-    
     <!-- execute dependencies -->
-    <exec_depend>rospy</exec_depend>
+    <exec_depend>rclpy</exec_depend>
+    <exec_depend>ros2bag</exec_depend>
+
+    <!-- test dependencies -->
+    <test_depend>ament_copyright</test_depend>
+    <test_depend>ament_flake8</test_depend>
+    <test_depend>ament_pep257</test_depend>
+    <test_depend>python3-pytest</test_depend>
+
+    <export>
+        <build_type>ament_python</build_type>
+    </export>
 </package>
