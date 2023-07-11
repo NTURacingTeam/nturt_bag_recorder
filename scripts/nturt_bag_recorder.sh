@@ -6,4 +6,4 @@ set -e
 BAG_NAME="$(date +'%Y-%m-%d-%I-%M-%S')"
 
 # start recording the bag
-ros2 bag record -o ${BAG_NAME} /from_can_bus
+ros2 bag record -o ${BAG_NAME} /from_can_bus /rosout /system_stats
