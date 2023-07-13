@@ -11,7 +11,7 @@ ROS2 provides a command `ros2 bag record` to record messages from topics. And it
 You can run this node by
 
 ```shell=
-ros2 run nturt_bag_recorder nturt_bag_recorder_node
+ros2 run nturt_bag_recorder nturt_bag_recorder_node.py
 ```
 
-The recorded bags will appear in `bags/` directory of this package's shared directory, and the name of the bag is the time when the bag is recorded.
+The recorded bags will appear in `~/.ros/bags/`, and the name of the bag is the time when the bag is recorded.

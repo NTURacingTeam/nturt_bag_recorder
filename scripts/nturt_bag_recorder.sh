@@ -6,4 +6,12 @@ set -e
 BAG_NAME="$(date +'%Y-%m-%d-%H-%M-%S')"
 
 # start recording the bag
-ros2 bag record -o ${BAG_NAME} /from_can_bus /rosout /system_stats
+# the flags are:
+# -o: the name of the bag
+# -d: duration in seconds before the bagfile will be split
+# --storage-preset-profile: configuration preset for storage, resilient to 
+#   reduce the chance of data corruption in case of a system crash
+ros2 bag record -o ${BAG_NAME} \
+    -d 10 \
+    --storage-preset-profile resilient \
+    /from_can_bus /rosout /system_stats

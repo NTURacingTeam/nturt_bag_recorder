@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 # python3 import
 import os
 import subprocess
@@ -9,12 +11,12 @@ from ament_index_python.packages import get_package_share_directory
 
 class BagRecorder(rclpy.node.Node):
     def __init__(self):
-        super().__init__('nturt_bag_record_node')
+        super().__init__('nturt_bag_recorder_node')
 
         # define default parameters
         nturt_bag_recorder_package = get_package_share_directory('nturt_bag_recorder')
-        default_record_script = os.path.join(nturt_bag_recorder_package, 'scripts', 'nturt_bag_recorder.sh')
-        default_record_folder = os.path.join(nturt_bag_recorder_package, 'bags')
+        default_record_script = os.path.join(nturt_bag_recorder_package, 'nturt_bag_recorder.sh')
+        default_record_folder = os.path.join(os.path.expanduser('~'), '.ros', 'bags')
 
         # declare parameters
         self.declare_parameter('record_script', default_record_script)
@@ -23,6 +25,10 @@ class BagRecorder(rclpy.node.Node):
         # get parameters
         self.record_script = self.get_parameter('record_script').get_parameter_value().string_value
         self.record_folder = self.get_parameter('record_folder').get_parameter_value().string_value
+
+        # create record folder if not exist
+        if not os.path.exists(self.record_folder):
+            os.makedirs(self.record_folder)
 
         # start recording
         # seems no need to shut the bag record node down because subprocess is doing tht for us when the program exits
