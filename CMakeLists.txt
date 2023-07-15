@@ -9,10 +9,10 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
+find_package(can_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(rclcpp_components REQUIRED)
 find_package(rclpy REQUIRED)
-find_package(rosbag2 REQUIRED)
+find_package(rosbag2_cpp REQUIRED)
 
 # install python module for this package
 ament_python_install_package(${PROJECT_NAME})
@@ -25,26 +25,36 @@ include_directories(
 # library: nturt_bag_recorder
 add_library(${PROJECT_NAME} SHARED
         src/bag_decoder.cpp
+        src/bag_decoder_arg_parser.cpp
 )
 ament_target_dependencies(${PROJECT_NAME}
-        rclcpp
-        rclcpp_components
+        can_msgs
+        rosbag2_cpp
 )
-# register to node components
-# node component: BagDecoder
-rclcpp_components_register_nodes(${PROJECT_NAME} "BagDecoder")
-set(node_plugins "${node_plugins}BagDecoder;$<TARGET_FILE:nturt_bag_recorder>\n")
 
 # executable
-# application: bag_decoder_node
-add_executable(bag_decoder_node
-        app/bag_decoder_node.cpp
+# application: bag_decoder
+add_executable(bag_decoder
+        app/bag_decoder.cpp
 )
-target_link_libraries(bag_decoder_node
+target_link_libraries(bag_decoder
         ${PROJECT_NAME}
 )
-ament_target_dependencies(bag_decoder_node
+ament_target_dependencies(bag_decoder
         rclcpp
+)
+
+# test: test_node
+add_executable(test_node
+        test/test_node.cpp
+)
+target_link_libraries(test_node
+        ${PROJECT_NAME}
+)
+ament_target_dependencies(test_node
+        can_msgs
+        rclcpp
+        rosbag2_cpp
 )
 
 # install headers
@@ -60,12 +70,12 @@ install(TARGETS ${PROJECT_NAME}
 )
 
 # install applications, test executables
-install(TARGETS bag_decoder_node
+install(TARGETS bag_decoder test_node
         DESTINATION lib/${PROJECT_NAME}
 )
 
 # install bash, python scripts
-install(DIRECTORY scripts/
+install(PROGRAMS scripts/nturt_bag_recorder_node.py scripts/merge_bag.sh
         DESTINATION lib/${PROJECT_NAME}
 )
 
@@ -96,8 +106,10 @@ ament_export_libraries(
 ament_export_dependencies(
         ament_cmake
         ament_cmake_python
+        can_msgs
+        rclcpp
         rclpy
-        ros2bag
+        rosbag2_cpp        
 )
 
 ament_package()

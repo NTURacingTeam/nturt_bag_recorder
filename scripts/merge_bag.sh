@@ -7,9 +7,9 @@ COLOR_GREEN='\e[0;32m'
 COLOR_RED='\e[1;31m'
 
 print_usage() {
-    echo "Merge and compress bag files"
+    echo "Merge split bag into one"
     echo ""
-    echo "Usage: ./merge_and_compress_bag.sh <INPUT_BAG> [OPTIONS]"
+    echo "Usage: ./merge_bag.sh [OPTIONS] INPUT_BAG"
     echo "Options:"
     echo "    -h --help       Print this help message and exit"
     echo "    -o --output     Output bag file name, default to merged_INPUT_BAG"
@@ -21,6 +21,7 @@ OUTPUT_BAG=""
 PARAM=$(getopt -o ho: -l help,output: -n "$0" -- "$@")
 
 if [ $? != 0 ]; then
+    echo -e "${COLOR_RED}Error: ${HIGHLIGHT}Unknown option${COLOR_REST}" >&2
     print_usage
     exit 1
 fi
@@ -55,7 +56,7 @@ while true; do
                 print_usage
                 exit 1
             elif [[ $# != 1 ]]; then
-                echo -e "${COLOR_RED}Error: ${HIGHLIGHT}More than argument given, expect only one bag${COLOR_REST}" >&2
+                echo -e "${COLOR_RED}Error: ${HIGHLIGHT}Too many input bags given, expect exactly one bag${COLOR_REST}" >&2
                 print_usage
                 exit 1
             else
@@ -72,16 +73,14 @@ if [[ -z ${OUTPUT_BAG} ]]; then
 fi
 
 # ros2 bag convert config file
-CONFIG_FILE=$(mktemp -t --suffix=.yaml  merge_and_compress_XXXXXXXX)
+CONFIG_FILE=$(mktemp -t --suffix=.yaml  merge_XXXXXXXX)
 
 echo "output_bags:
   - uri: ${OUTPUT_BAG}
-    all: true
-    compression_mode: file
-    compression_format: zstd" > ${CONFIG_FILE}
+    all: true" > ${CONFIG_FILE}
 
 echo "reindexing ${INPUT_BAG}..."
 ros2 bag reindex ${INPUT_BAG}
 
-echo "merging and compressing ${INPUT_BAG}..."
+echo "merging ${INPUT_BAG}..."
 ros2 bag convert -i ${INPUT_BAG} -o ${CONFIG_FILE}
