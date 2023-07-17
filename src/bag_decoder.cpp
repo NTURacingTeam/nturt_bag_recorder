@@ -185,7 +185,7 @@ void BagDecoder::run() {
   rosbag2_storage::SerializedBagMessageSharedPtr serialized_message =
       reader.read_next();
 
-  double time = RCUTILS_NS_TO_S(serialized_message->time_stamp);
+  double time = static_cast<double>(serialized_message->time_stamp) / 1.0E9;
 
   status_logger_.init_time(time);
   sensor_logger_.init_time(time);
@@ -197,7 +197,7 @@ void BagDecoder::run() {
 
   while (reader.has_next()) {
     serialized_message = reader.read_next();
-    time = RCUTILS_NS_TO_S(serialized_message->time_stamp);
+    time = static_cast<double>(serialized_message->time_stamp) / 1.0E9;
 
     // write local buffers to csv file before updating the data
     status_logger_.update(time);
