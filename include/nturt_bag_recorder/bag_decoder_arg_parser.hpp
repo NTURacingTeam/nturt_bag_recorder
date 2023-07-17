@@ -8,8 +8,8 @@ struct BagDecoderArg {
   /// @brief The input bag file.
   std::string bag_file;
 
-  /// @brief The output csv file.
-  std::string output_file;
+  /// @brief The output directory.
+  std::string output_directory;
 };
 
 /**

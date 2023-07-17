@@ -1,7 +1,7 @@
 /**
  * @file bag_decoder.hpp
  * @author QuantumSpawner jet22854111@gmail.com
- * @brief Writer for csv file.
+ * @brief CsvWriter for csv file.
  *
  * Courtesy to p-ranav/csv2, modified from
  * https://github.com/p-ranav/csv2/blob/master/include/csv2/writer.hpp.
@@ -12,19 +12,21 @@
 
 // stl include
 #include <fstream>
+#include <iomanip>
 #include <iterator>
 #include <string>
 #include <utility>
 
-class Writer {
+class CsvWriter {
  public:
-  /// @brief Constructor of Writer.
-  Writer(std::string file) {
+  /// @brief Constructor of CsvWriter.
+  CsvWriter(const std::string &file) {
     stream_.open(file, std::ios::out | std::ios::trunc);
+    stream_ << std::fixed << std::setprecision(2);
   }
 
-  /// @brief Destructor of Writer.
-  ~Writer() { stream_.close(); }
+  /// @brief Destructor of CsvWriter.
+  ~CsvWriter() { stream_.close(); }
 
   /**
    * @brief Get the stream to write to the csv file.
@@ -43,6 +45,7 @@ class Writer {
   template <typename Container>
   void write_row(Container &&row) {
     const auto &strings = std::forward<Container>(row);
+
     std::copy(strings.begin(), strings.end() - 1,
               std::ostream_iterator<
                   typename std::remove_reference_t<Container>::value_type>(

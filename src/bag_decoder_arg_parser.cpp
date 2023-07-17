@@ -23,7 +23,7 @@ static const char *usage =
     "Usage: ./bag_decoder [OPTIONS] INPUT_BAG\n"
     "Options:\n"
     "    -h --help       Print this help message and exit\n"
-    "    -o --output     Output file name, default to INPUT_BAG.csv\n";
+    "    -o --output     Output directory, default to decoded_INPUT_BAG\n";
 
 void parse_arg(int argc, char **argv, BagDecoderArg *arg) {
   // prevent getopt to print error message to stderr
@@ -43,7 +43,7 @@ void parse_arg(int argc, char **argv, BagDecoderArg *arg) {
         break;
 
       case 'o':
-        arg->output_file = optarg;
+        arg->output_directory = optarg;
         break;
 
       case '?':
@@ -77,7 +77,7 @@ void parse_arg(int argc, char **argv, BagDecoderArg *arg) {
     }
   }
 
-  if (arg->output_file.empty()) {
-    arg->output_file = arg->bag_file + ".csv";
+  if (arg->output_directory.empty()) {
+    arg->output_directory = "decoded_" + arg->bag_file;
   }
 }

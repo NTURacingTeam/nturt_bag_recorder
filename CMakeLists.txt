@@ -10,9 +10,14 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 find_package(can_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(nturt_can_config REQUIRED)
+find_package(nturt_ros_interface REQUIRED)
+find_package(rcl_interfaces REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(rosbag2_cpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
 
 # install python module for this package
 ament_python_install_package(${PROJECT_NAME})
@@ -29,7 +34,12 @@ add_library(${PROJECT_NAME} SHARED
 )
 ament_target_dependencies(${PROJECT_NAME}
         can_msgs
+        geometry_msgs
+        nturt_can_config
+        nturt_ros_interface
+        rcl_interfaces
         rosbag2_cpp
+        sensor_msgs
 )
 
 # executable
@@ -107,9 +117,14 @@ ament_export_dependencies(
         ament_cmake
         ament_cmake_python
         can_msgs
+        geometry_msgs
+        nturt_can_config
+        nturt_ros_interface
+        rcl_interfaces
         rclcpp
         rclpy
-        rosbag2_cpp        
+        rosbag2_cpp
+        sensor_msgs
 )
 
 ament_package()
