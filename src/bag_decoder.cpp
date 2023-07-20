@@ -28,6 +28,9 @@
 // nturt include
 #include "nturt_bag_recorder/bag_decoder_arg_parser.hpp"
 #include "nturt_can_config.h"
+#include "nturt_can_config/battery_utils.hpp"
+#include "nturt_can_config/can_callback_register.hpp"
+#include "nturt_can_config/can_timeout_monitor.hpp"
 #include "nturt_can_config_logger-binutil.h"
 
 #define COLOR_REST "\033[0m"
@@ -35,17 +38,34 @@
 #define COLOR_RED "\033[1;31m"
 
 /* Class Static vataible -----------------------------------------------------*/
-const std::vector<std::string> BagDecoder::status_header_ = {
-    "vcu_status",
-    "vcu_error_code",
-    "rear_sensor_status",
-    "rear_sensor_error_code",
-    "bms_error_code",
-    "inverter_state",
-    "inverter_vsm_state"
-    "inverter_post_fault",
-    "inverter_run_fault",
+const std::unordered_map<int, std::string> BagDecoder::log_level_to_string_ = {
+    {rcl_interfaces::msg::Log::DEBUG, "DEBUG"},
+    {rcl_interfaces::msg::Log::INFO, "INFO"},
+    {rcl_interfaces::msg::Log::WARN, "WARN"},
+    {rcl_interfaces::msg::Log::ERROR, "ERROR"},
+    {rcl_interfaces::msg::Log::FATAL, "FATAL"},
 };
+
+const std::unordered_map<int, std::string> BagDecoder::gps_fix_to_string_ = {
+    {-1, "NO_FIX"}, {0, "NO_FIX"}, {1, "FIX"}, {2, "SBAS_FIX"}, {3, "GBAS_FIX"},
+
+};
+
+const std::unordered_map<int, std::string>
+    BagDecoder::gps_covarience_type_to_string_ = {
+        {0, "UNKNOWN"},
+        {1, "APPROXIMATED"},
+        {2, "DIAGONAL_KNOWN"},
+        {3, "KNOWN"},
+};
+
+const std::vector<std::string> BagDecoder::status_header_ = {
+    "can_rx_timeout",      "can_rx_timeout_code", "vcu_status",
+    "vcu_error_code",      "rear_sensor_status",  "rear_sensor_error_code",
+    "bms_error_code",      "inverter_state",      "inverter_vsm_state",
+    "inverter_post_fault", "inverter_run_fault",
+};
+
 const std::vector<std::string> BagDecoder::sensor_header_ = []() {
   std::vector<std::string> header;
   header.reserve(32);
@@ -95,7 +115,11 @@ const std::vector<std::string> BagDecoder::imu_header_ = {
 };
 
 const std::vector<std::string> BagDecoder::gps_header_ = {
-    "longitude", "latitude", "altitude", "velocity_x", "velocity_y",
+    "status",        "serivce used",    "longitude",     "latitude",
+    "covarience[0]", "covarience[1]",   "covarience[2]", "covarience[3]",
+    "covarience[4]", "covarience[5]",   "covarience[6]", "covarience[7]",
+    "covarience[8]", "covarience type", "altitude",      "velocity_x",
+    "velocity_y",
 };
 
 const std::vector<std::string> BagDecoder::battery_header_ = []() {
@@ -146,8 +170,14 @@ void DataLogger<T>::update(double time) {
   }
 }
 
+template <typename T>
+void DataLogger<T>::write_raw(std::string data) {
+  csv_writer_.get_stream() << data + ",";
+}
+
 BagDecoder::BagDecoder(BagDecoderArg arg)
     : arg_(arg),
+      roslog_writter_(arg.output_directory + "/roslog.csv"),
       status_logger_(arg.output_directory + "/status", status_header_,
                      std::bind(&BagDecoder::onUpdateStatus, this), 0.1),
       sensor_logger_(arg.output_directory + "/sensor", sensor_header_,
@@ -164,10 +194,19 @@ BagDecoder::BagDecoder(BagDecoderArg arg)
       system_stats_logger_(
           arg.output_directory + "/system_stats", system_stats_header_,
           std::bind(&BagDecoder::onUpdateSystemStats, this), 0.1) {
+  // init can_rx_
   memset(&can_rx_, 0, sizeof(can_rx_));
+
+  const std::vector<std::string> roslog_header = {
+      "time", "level", "name", "msg", "function", "file", "line",
+  };
+  roslog_writter_.write_row(roslog_header);
 }
 
 void BagDecoder::run() {
+  CanCallbackRegieter::register_callback(
+      static_cast<get_tick_t>(std::bind(&BagDecoder::get_tick, this)));
+
   // open bag
   rosbag2_storage::StorageOptions storage_options{};
 
@@ -185,31 +224,36 @@ void BagDecoder::run() {
   rosbag2_storage::SerializedBagMessageSharedPtr serialized_message =
       reader.read_next();
 
-  double time = static_cast<double>(serialized_message->time_stamp) / 1.0E9;
+  time_ = static_cast<double>(serialized_message->time_stamp) / 1.0E9;
 
-  status_logger_.init_time(time);
-  sensor_logger_.init_time(time);
-  imu_logger_.init_time(time);
-  gps_logger_.init_time(time);
-  battery_logger_.init_time(time);
-  inverter_data_logger_.init_time(time);
-  system_stats_logger_.init_time(time);
+  status_logger_.init_time(time_);
+  sensor_logger_.init_time(time_);
+  imu_logger_.init_time(time_);
+  gps_logger_.init_time(time_);
+  battery_logger_.init_time(time_);
+  inverter_data_logger_.init_time(time_);
+  system_stats_logger_.init_time(time_);
+
+  nturt_can_config_logger_Check_Receive_Timeout_Init(&can_rx_);
 
   while (reader.has_next()) {
     serialized_message = reader.read_next();
-    time = static_cast<double>(serialized_message->time_stamp) / 1.0E9;
+    time_ = static_cast<double>(serialized_message->time_stamp) / 1.0E9;
 
     // write local buffers to csv file before updating the data
-    status_logger_.update(time);
-    sensor_logger_.update(time);
-    imu_logger_.update(time);
-    gps_logger_.update(time);
-    battery_logger_.update(time);
-    inverter_data_logger_.update(time);
-    system_stats_logger_.update(time);
+    status_logger_.update(time_);
+    sensor_logger_.update(time_);
+    imu_logger_.update(time_);
+    gps_logger_.update(time_);
+    battery_logger_.update(time_);
+    inverter_data_logger_.update(time_);
+    system_stats_logger_.update(time_);
 
     // update local buffers from bag message
     update_data(serialized_message);
+
+    // update can_rx_ timeout
+    nturt_can_config_logger_Check_Receive_Timeout(&can_rx_);
   }
 }
 
@@ -218,6 +262,18 @@ void BagDecoder::update_data(
   rclcpp::SerializedMessage extracted_serialized_msg(*msg->serialized_data);
 
   if (msg->topic_name == "/rosout") {
+    rcl_interfaces::msg::Log log;
+    log_serializer_.deserialize_message(&extracted_serialized_msg, &log);
+    const std::vector<std::string> roslog = {
+        std::to_string(msg->time_stamp / 10E9),
+        log_level_to_string_.at(log.level),
+        log.name,
+        "\"" + log.msg + "\"",
+        log.function,
+        log.file,
+        std::to_string(log.line),
+    };
+    roslog_writter_.write_row(roslog);
   } else if (msg->topic_name == "/from_can_bus") {
     can_msgs::msg::Frame frame;
     frame_serializer_.deserialize_message(&extracted_serialized_msg, &frame);
@@ -240,8 +296,32 @@ void BagDecoder::update_data(
 }
 
 std::vector<uint32_t> BagDecoder::onUpdateStatus() {
+  // can rx timeout
+  std::string timeout_frame_name = "\"";
+  if (can_timeout_monior::can_rx_error & FRAME_FRONT_MASK) {
+    timeout_frame_name += "Front Box, ";
+  }
+  if (can_timeout_monior::can_rx_error & FRAME_REAR_MASK) {
+    timeout_frame_name += "Rear Box, ";
+  }
+  if (can_timeout_monior::can_rx_error & FRAME_BMS_MASK) {
+    timeout_frame_name += "BMS, ";
+  }
+  if (can_timeout_monior::can_rx_error & FRAME_INVERTER_MASK) {
+    timeout_frame_name += "Inverter, ";
+  }
+  if (can_timeout_monior::can_rx_error & FRAME_IMU_MASK) {
+    timeout_frame_name += "IMU, ";
+  }
+
+  timeout_frame_name += "\"";
+
+  status_logger_.write_raw(timeout_frame_name);
+
   std::vector<uint32_t> data;
-  data.reserve(9);
+  data.reserve(10);
+
+  data.push_back(can_timeout_monior::can_rx_error);
 
   data.push_back(can_rx_.VCU_Status.VCU_Status);
   data.push_back(can_rx_.VCU_Status.VCU_Error_Code);
@@ -351,16 +431,26 @@ std::vector<double> BagDecoder::onUpdateImu() {
   return data;
 }
 
-std::vector<double> BagDecoder::onUpdateGps() {
-  std::vector<double> data;
-  data.reserve(5);
+std::vector<std::string> BagDecoder::onUpdateGps() {
+  std::vector<std::string> data;
+  data.reserve(17);
 
-  data.push_back(gps_fix_.longitude);
-  data.push_back(gps_fix_.latitude);
-  data.push_back(gps_fix_.altitude);
+  data.push_back(gps_fix_to_string_.at(gps_fix_.status.status));
+  data.push_back(std::to_string(gps_fix_.status.service));
 
-  data.push_back(gps_vel_.twist.linear.x);
-  data.push_back(gps_vel_.twist.linear.y);
+  data.push_back(std::to_string(gps_fix_.longitude));
+  data.push_back(std::to_string(gps_fix_.latitude));
+  data.push_back(std::to_string(gps_fix_.altitude));
+
+  for (int i = 0; i < 9; i++) {
+    data.push_back(std::to_string(gps_fix_.position_covariance[i]));
+  }
+
+  data.push_back(
+      gps_covarience_type_to_string_.at(gps_fix_.position_covariance_type));
+
+  data.push_back(std::to_string(gps_vel_.twist.linear.x));
+  data.push_back(std::to_string(gps_vel_.twist.linear.y));
 
   return data;
 }
@@ -416,6 +506,8 @@ std::vector<double> BagDecoder::onUpdateSystemStats() {
 
   return data;
 }
+
+uint32_t BagDecoder::get_tick() { return static_cast<uint32_t>(time_ * 1000); }
 
 /* Exported function ---------------------------------------------------------*/
 void create_directory(const std::string& path) {

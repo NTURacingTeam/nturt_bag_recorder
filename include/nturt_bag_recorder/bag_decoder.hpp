@@ -14,6 +14,7 @@
 #include <fstream>
 #include <functional>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 // ros2 include
@@ -73,6 +74,13 @@ class DataLogger {
    */
   void update(double time);
 
+  /**
+   * @brief Write raw data to the csv file.
+   *
+   * @param data Raw data to write.
+   */
+  void write_raw(std::string data);
+
  private:
   /// @brief Writer for csv file.
   CsvWriter csv_writer_;
@@ -107,19 +115,67 @@ class BagDecoder {
    */
   void update_data(rosbag2_storage::SerializedBagMessageSharedPtr msg);
 
+  /**
+   * @brief Function to get status data to write to csv file.
+   *
+   * @return std::vector<uint32_t> Data to write to csv file.
+   */
   std::vector<uint32_t> onUpdateStatus();
 
+  /**
+   * @brief Function to get sensor data to write status data to csv file.
+   *
+   * @return std::vector<double> Data to write to csv file.
+   */
   std::vector<double> onUpdateSensor();
 
+  /**
+   * @brief Function to get imu data to write status data to csv file.
+   *
+   * @return std::vector<double> Data to write to csv file.
+   */
   std::vector<double> onUpdateImu();
 
-  std::vector<double> onUpdateGps();
+  /**
+   * @brief Function to get gps data to write status data to csv file.
+   *
+   * @return std::vector<std::string> Data to write to csv file.
+   */
+  std::vector<std::string> onUpdateGps();
 
+  /**
+   * @brief Function to get battery data to write status data to csv file.
+   *
+   * @return std::vector<double> Data to write to csv file.
+   */
   std::vector<double> onUpdateBattery();
 
+  /**
+   * @brief Function to get inverter data to write status data to csv file.
+   *
+   * @return std::vector<double> Data to write to csv file.
+   */
   std::vector<double> onUpdateInverterData();
 
+  /**
+   * @brief Function to get system stats data to write status data to csv file.
+   *
+   * @return std::vector<double> Data to write to csv file.
+   */
   std::vector<double> onUpdateSystemStats();
+
+  /* coder dbc callback function ---------------------------------------------*/
+  uint32_t get_tick();
+
+  /// @brief Map to convert log level to string.
+  static const std::unordered_map<int, std::string> log_level_to_string_;
+
+  /// @brief Map to convert gps fix code to string.
+  static const std::unordered_map<int, std::string> gps_fix_to_string_;
+
+  /// @brief Map to convert gps covarience type code to string.
+  static const std::unordered_map<int, std::string>
+      gps_covarience_type_to_string_;
 
   /// @brief Header for system status.
   static const std::vector<std::string> status_header_;
@@ -144,6 +200,9 @@ class BagDecoder {
 
   /// @brief Struct containing command line arguments.
   BagDecoderArg arg_;
+
+  /// @brief Last updated time.
+  double time_;
 
   /// @brief Struct for storing can frame data.
   nturt_can_config_logger_rx_t can_rx_;
@@ -177,6 +236,9 @@ class BagDecoder {
   rclcpp::Serialization<nturt_ros_interface::msg::SystemStats>
       system_stats_serializer_;
 
+  /// @brief CSV writter for roslog.
+  CsvWriter roslog_writter_;
+
   /// @brief Data logger for logging system status.
   DataLogger<uint32_t> status_logger_;
 
@@ -187,7 +249,7 @@ class BagDecoder {
   DataLogger<double> imu_logger_;
 
   /// @brief Data logger for logging gps data.
-  DataLogger<double> gps_logger_;
+  DataLogger<std::string> gps_logger_;
 
   /// @brief Data logger for logging battery data.
   DataLogger<double> battery_logger_;

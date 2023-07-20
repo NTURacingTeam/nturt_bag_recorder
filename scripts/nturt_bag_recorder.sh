@@ -14,4 +14,4 @@ BAG_NAME="$(date +'%Y-%m-%d-%H-%M-%S')"
 ros2 bag record -o ${BAG_NAME} \
     -d 10 \
     --storage-preset-profile resilient \
-    /from_can_bus /gps_fix /gps_vel /system_stats /rosout
+    /from_can_bus /fix /vel /system_stats /rosout
