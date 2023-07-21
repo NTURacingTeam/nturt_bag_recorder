@@ -10,9 +10,11 @@
 
     <!-- general dependencies-->
     <depend>can_msgs</depend>
+    <depend>nturt_can_config</depend>    
+    <depend>nturt_ros_interface</depend>
     <depend>rclcpp</depend>
     <depend>rclcpp_components</depend>
-    <depend>ros2bag2_cpp</depend>
+    <depend>rosbag2_cpp</depend>
 
     <!-- execute dependencies -->
     <exec_depend>rclpy</exec_depend>
