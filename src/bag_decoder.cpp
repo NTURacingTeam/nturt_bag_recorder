@@ -85,9 +85,9 @@ const std::vector<std::string> BagDecoder::sensor_header_ = []() {
   header.push_back("rear_left_wheel_speed");
   header.push_back("rear_right_wheel_speed");
 
-  header.push_back("rear_right_suspension_travel");
-  header.push_back("rear_right_suspension_travel");
-  header.push_back("rear_right_suspension_travel");
+  header.push_back("front_left_suspension_travel");
+  header.push_back("front_right_suspension_travel");
+  header.push_back("rear_left_suspension_travel");
   header.push_back("rear_right_suspension_travel");
 
   for (int i = 1; i <= 4; i++) {
