@@ -1,52 +1,43 @@
 #!/usr/bin/python3
 
-# python3 import
+# python import
+import datetime
 import os
-import subprocess
 
 # ros2 import
-import rclpy
-import rclpy.node
-from ament_index_python.packages import get_package_share_directory
+import rosbag2_py
 
-class BagRecorder(rclpy.node.Node):
+class BagRecorder:
     def __init__(self):
-        super().__init__('nturt_bag_recorder_node')
 
-        # define default parameters
-        nturt_bag_recorder_package = get_package_share_directory('nturt_bag_recorder')
-        default_record_script = os.path.join(nturt_bag_recorder_package, 'nturt_bag_recorder.sh')
-        default_record_folder = os.path.join(os.path.expanduser('~'), '.ros', 'bags')
+        # prevent bag file name conflict
+        bag_uri = os.path.join(os.path.expanduser("~"), ".ros", "bags", datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+        if os.path.exists(bag_uri):
+            surfix_count = 1
+            while os.path.exists(bag_uri + "_" + str(surfix_count)):
+                surfix_count += 1
 
-        # declare parameters
-        self.declare_parameter('record_script', default_record_script)
-        self.declare_parameter('record_folder', default_record_folder)
+            bag_uri = bag_uri + "_" + str(surfix_count)
 
-        # get parameters
-        self.record_script = self.get_parameter('record_script').get_parameter_value().string_value
-        self.record_folder = self.get_parameter('record_folder').get_parameter_value().string_value
+        self.storage_options = rosbag2_py.StorageOptions(
+            uri=bag_uri,
+            storage_id="sqlite3",
+            max_bagfile_duration=10,
+            storage_preset_profile="resilient"
+        )
 
-        # create record folder if not exist
-        if not os.path.exists(self.record_folder):
-            os.makedirs(self.record_folder)
+        self.record_options = rosbag2_py.RecordOptions()
+        self.record_options.topics = ["/from_can_bus", "/fix", "/vel", "/system_stats", "/rosout"]
 
-        # start recording
-        # seems no need to shut the bag record node down because subprocess is doing tht for us when the program exits
-        self.get_logger().info(f'Start recording to {self.record_folder} with recording script {self.record_script}.')
-        command = "source " + self.record_script
-        self.process = subprocess.Popen(command, stdin=subprocess.PIPE, shell=True, cwd=self.record_folder, executable='/bin/bash')
+        self.recorder = rosbag2_py.Recorder()
+    
+    def run(self):
+        self.recorder.record(self.storage_options, self.record_options)
 
-def main(args=None):
-    rclpy.init(args=args)
+if __name__ == "__main__":
+    bag_recorder = BagRecorder()
 
-    bag_recorder_node = BagRecorder()
-
-    rclpy.spin(bag_recorder_node)
-
-    bag_recorder_node.destroy_node()
-
-    rclpy.shutdown()
-
-
-if __name__ == '__main__':
-    main()
+    try:
+        bag_recorder.run()
+    except KeyboardInterrupt:
+        pass

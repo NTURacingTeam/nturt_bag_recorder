@@ -85,13 +85,8 @@ install(TARGETS bag_decoder test_node
 )
 
 # install bash, python scripts
-install(PROGRAMS scripts/nturt_bag_recorder_node.py scripts/merge_bag.sh
+install(PROGRAMS scripts/nturt_bag_recorder_node.py scripts/merge_decode_bag.sh
         DESTINATION lib/${PROJECT_NAME}
-)
-
-# install scripts
-install(PROGRAMS scripts/nturt_bag_recorder.sh
-        DESTINATION share/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)
