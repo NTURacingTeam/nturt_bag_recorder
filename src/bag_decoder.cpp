@@ -115,11 +115,10 @@ const std::vector<std::string> BagDecoder::imu_header_ = {
 };
 
 const std::vector<std::string> BagDecoder::gps_header_ = {
-    "status",        "serivce used",    "longitude",     "latitude",
+    "status",        "serivce used",    "longitude",     "latitude",    "altitude",
     "covarience[0]", "covarience[1]",   "covarience[2]", "covarience[3]",
     "covarience[4]", "covarience[5]",   "covarience[6]", "covarience[7]",
-    "covarience[8]", "covarience type", "altitude",      "velocity_x",
-    "velocity_y",
+    "covarience[8]", "covarience type", "velocity_x",    "velocity_y",
 };
 
 const std::vector<std::string> BagDecoder::battery_header_ = []() {
