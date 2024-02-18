@@ -57,3 +57,8 @@ launched and bag recorded successfully.
 
 
 ## Todos in 1.0:
+
+
+(Written Chih Han YAng)
+### Uploader and Receiver
+The uploader and receiver is almost done. The uploader would upload
