@@ -5,7 +5,7 @@ from typing import List
 import rclpy
 from rclpy.node import Node
 
-BAGS_PATH = "/home/user/Documents/docker/packages/ros2/raw_data"
+BAGS_PATH = "/home/docker/ws/src/raw_data"
 # the path on the remote host
 
 class BagReceiver(Node):
@@ -21,7 +21,7 @@ class BagReceiver(Node):
         for current_bag in current_bags:
             os.system(f"ros2 run nturt_bag_recorder merge_decode_bag.sh -md {BAGS_PATH}/{current_bag}")
             self.decoded_bags.append(current_bag)
-            # self.get_logger().info(f"{current_bag} bag received and decoded.")
+            self.get_logger().info(f"{current_bag} bag received and start decoding.")
 
 if __name__ == "__main__":
     rclpy.init()
