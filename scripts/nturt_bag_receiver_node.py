@@ -19,9 +19,13 @@ class BagReceiver(Node):
         self.get_logger().info("Start Checking")
         current_bags = [d for d in os.listdir(BAGS_PATH) if "merged" not in d and d not in self.decoded_bags]
         for current_bag in current_bags:
-            os.system(f"ros2 run nturt_bag_recorder merge_decode_bag.sh -md {BAGS_PATH}/{current_bag}")
-            self.decoded_bags.append(current_bag)
             self.get_logger().info(f"{current_bag} bag received and start decoding.")
+            status = os.system(f"ros2 run nturt_bag_recorder merge_decode_bag.sh -md {BAGS_PATH}/{current_bag}")
+            if status == 0:
+                self.decoded_bags.append(current_bag)
+                self.get_logger().info(f"{current_bag} bag decoded.")
+            else:
+                self.get_logger().info(f"{current_bag} bag failed decoding. Decode later...")
 
 if __name__ == "__main__":
     rclpy.init()
