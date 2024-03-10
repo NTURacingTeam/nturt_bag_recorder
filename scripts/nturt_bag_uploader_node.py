@@ -2,7 +2,7 @@
 
 import paramiko
 import os
-
+from RPI.GPIO import GPIO
 import rclpy
 from rclpy.node import Node
 
@@ -12,6 +12,9 @@ PASSWORD = "nturacing"
 PORT = 22
 BAGS_PATH = "/home/docker/.ros/bags"
 REMOTE_BAGS_PATH = "/home/user/Documents/docker/packages/ros2/raw_data"
+BUTTON_PIN = 16
+pressed = False
+
 
 class BagUploader(Node):
     def __init__(self):
@@ -25,7 +28,8 @@ class BagUploader(Node):
             username=USERNAME,
             password=PASSWORD
         )
-
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         self.sftp = self.ssh_client.open_sftp()
         self.get_logger().info('bag uploader connection established successfully')
 
@@ -53,7 +57,14 @@ if __name__ == "__main__":
     bag_uploader = BagUploader()
 
     try:
-        bag_uploader.run()
+        while True:
+            if not GPIO.input(BUTTON_PIN):
+                if not pressed:
+                    bag_uploader.run()
+                    pressed = True
+            # button not pressed (or released)
+            else:
+                pressed = False
     except KeyboardInterrupt:
         pass
     finally:
