@@ -2,7 +2,7 @@
 
 import paramiko
 import os
-from RPI.GPIO import GPIO
+from RPi.GPIO import GPIO
 import rclpy
 from rclpy.node import Node
 
