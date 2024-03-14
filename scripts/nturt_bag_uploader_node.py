@@ -60,6 +60,7 @@ if __name__ == "__main__":
         while True:
             if not GPIO.input(BUTTON_PIN):
                 if not pressed:
+                    bag_uploader.get_logger().info("Button Pressed, Start Uploading...")
                     bag_uploader.run()
                     pressed = True
             # button not pressed (or released)
