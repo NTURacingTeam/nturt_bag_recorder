@@ -6,12 +6,13 @@ import RPi.GPIO as GPIO
 import rclpy
 from rclpy.node import Node
 
-HOST = "140.112.14.14"
-USERNAME = "user"
-PASSWORD = "nturacing"
+# requires wiregraud VPN activation
+HOST = "192.168.0.4"
+USERNAME = "nturt"
+PASSWORD = "nturt2023"
 PORT = 22
 BAGS_PATH = "/home/docker/.ros/bags"
-REMOTE_BAGS_PATH = "/home/user/Documents/docker/packages/ros2/raw_data"
+REMOTE_BAGS_PATH = "/home/nturt/Documents/docker/packages/ros2/raw_data"
 BUTTON_PIN = 16
 pressed = False
 
