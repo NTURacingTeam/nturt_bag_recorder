@@ -53,3 +53,5 @@ Since the recorded bag has to be first porcessed by `merge_decode_bag.sh` with `
 To use this mode, use `-d` option.
 
 > Note: For more inofrmation about the usage of the utilities, use `-h` option to see the help message.
+
+- \[Update on 2024.3.19\]: The current sample rate of each data are updated to 100Hz, and there's a unified data csv file incorporating battery, gps, imu, inverter, and sensor. - by CHYang25

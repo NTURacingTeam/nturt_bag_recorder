@@ -16,6 +16,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <variant>
 
 // ros2 include
 #include <rclcpp/serialization.hpp>
@@ -164,6 +165,16 @@ class BagDecoder {
    */
   std::vector<double> onUpdateSystemStats();
 
+  /**
+   * @brief Function to get unified data to write to a unified csv file
+   * 
+   * @author CHYang25 chris920325@gmail.com
+   * 
+   * @return std::vector<std::string> Data to write to unified csv file
+   * 
+   */
+  std::vector<std::string> onUpdateUnifiedData();
+
   /* coder dbc callback function ---------------------------------------------*/
   uint32_t get_tick();
 
@@ -197,6 +208,10 @@ class BagDecoder {
 
   /// @brief Header for system stats.
   static const std::vector<std::string> system_stats_header_;
+
+  /// @brief Header for unified data.
+  /// @author CHYang25 chris920325@gmail.com
+  static const std::vector<std::string> unified_data_header_;
 
   /// @brief Struct containing command line arguments.
   BagDecoderArg arg_;
@@ -259,6 +274,10 @@ class BagDecoder {
 
   /// @brief Data logger for logging system stats.
   DataLogger<double> system_stats_logger_;
+
+  /// @brief Data logger for logging unified stats
+  /// @author CHYang25 chris920325@gmail.com
+  DataLogger<std::string> unified_logger_;
 };
 
 /**

@@ -37,6 +37,18 @@
 #define HIGHLIGHT "\033[0;1m"
 #define COLOR_RED "\033[1;31m"
 
+/* Vector Concatenate Operator -----------------------------------------------*/
+/// @brief An operator for vector concatenation
+/// @author CHYang25 chris920325@gmail.com
+template <typename T>
+std::vector<T> operator+(const std::vector<T> &x, const std::vector<T> &y) {
+    std::vector<T> vec;
+    vec.reserve(x.size() + y.size());
+    vec.insert(vec.end(), x.begin(), x.end());
+    vec.insert(vec.end(), y.begin(), y.end());
+    return vec;
+}
+
 /* Class Static vataible -----------------------------------------------------*/
 const std::unordered_map<int, std::string> BagDecoder::log_level_to_string_ = {
     {rcl_interfaces::msg::Log::DEBUG, "DEBUG"},
@@ -150,6 +162,10 @@ const std::vector<std::string> BagDecoder::system_stats_header_ = {
     "cpu_temp", "cpu_usage", "mem_usage", "swap_usage", "disk_usage",
 };
 
+const std::vector<std::string> BagDecoder::unified_data_header_ = 
+    BagDecoder::sensor_header_ + BagDecoder::imu_header_ + BagDecoder::gps_header_ +
+    BagDecoder::battery_header_ + BagDecoder::inverter_data_header_;
+
 /* Class function ------------------------------------------------------------*/
 template <typename T>
 void DataLogger<T>::init_time(double time) {
@@ -178,21 +194,24 @@ BagDecoder::BagDecoder(BagDecoderArg arg)
     : arg_(arg),
       roslog_writter_(arg.output_directory + "/roslog.csv"),
       status_logger_(arg.output_directory + "/status", status_header_,
-                     std::bind(&BagDecoder::onUpdateStatus, this), 0.1),
+                     std::bind(&BagDecoder::onUpdateStatus, this), 0.01),
       sensor_logger_(arg.output_directory + "/sensor", sensor_header_,
-                     std::bind(&BagDecoder::onUpdateSensor, this), 0.1),
+                     std::bind(&BagDecoder::onUpdateSensor, this), 0.01),
       imu_logger_(arg.output_directory + "/imu", imu_header_,
                   std::bind(&BagDecoder::onUpdateImu, this), 0.01),
       gps_logger_(arg.output_directory + "/gps", gps_header_,
-                  std::bind(&BagDecoder::onUpdateGps, this), 1),
+                  std::bind(&BagDecoder::onUpdateGps, this), 0.01),
       battery_logger_(arg.output_directory + "/battery", battery_header_,
-                      std::bind(&BagDecoder::onUpdateBattery, this), 1),
+                      std::bind(&BagDecoder::onUpdateBattery, this), 0.01),
       inverter_data_logger_(
           arg.output_directory + "/inverter_data", inverter_data_header_,
           std::bind(&BagDecoder::onUpdateInverterData, this), 0.01),
       system_stats_logger_(
           arg.output_directory + "/system_stats", system_stats_header_,
-          std::bind(&BagDecoder::onUpdateSystemStats, this), 0.1) {
+          std::bind(&BagDecoder::onUpdateSystemStats, this), 0.01),
+      unified_logger_(
+          arg.output_directory + "/unified_stats", unified_data_header_,
+          std::bind(&BagDecoder::onUpdateUnifiedData, this), 0.01) {
   // init can_rx_
   memset(&can_rx_, 0, sizeof(can_rx_));
 
@@ -232,6 +251,7 @@ void BagDecoder::run() {
   battery_logger_.init_time(time_);
   inverter_data_logger_.init_time(time_);
   system_stats_logger_.init_time(time_);
+  unified_logger_.init_time(time_);
 
   nturt_can_config_logger_Check_Receive_Timeout_Init(&can_rx_);
 
@@ -247,6 +267,7 @@ void BagDecoder::run() {
     battery_logger_.update(time_);
     inverter_data_logger_.update(time_);
     system_stats_logger_.update(time_);
+    unified_logger_.update(time_);
 
     // update local buffers from bag message
     update_data(serialized_message);
@@ -502,6 +523,38 @@ std::vector<double> BagDecoder::onUpdateSystemStats() {
   data.push_back(system_stats_.memory_usage);
   data.push_back(system_stats_.swap_usage);
   data.push_back(system_stats_.disk_usage);
+
+  return data;
+}
+
+/// @author CHYang25 chris920325@gmail.com
+// It should match with the order of headers
+std::vector<std::string> BagDecoder::onUpdateUnifiedData() {
+  std::vector<double> sensor_data = this->onUpdateSensor(), 
+                      imu_data = this->onUpdateImu(),
+                      battery_data = this->onUpdateBattery(),
+                      inverter_data = this->onUpdateInverterData();
+  std::vector<std::string> gps_data = this->onUpdateGps();
+
+  const int col_size = sensor_data.size() + imu_data.size() + 
+                    gps_data.size() + battery_data.size() + inverter_data.size();
+      
+  std::vector<std::string> data(col_size);
+  std::vector<std::string>::iterator data_iter = data.begin();
+
+  auto cast_double_lambda_function = [] (double x){
+    return std::to_string(x);
+  };
+
+  std::transform(sensor_data.begin(), sensor_data.end(), data_iter, cast_double_lambda_function);
+  data_iter += sensor_data.size();
+  std::transform(imu_data.begin(), imu_data.end(), data_iter, cast_double_lambda_function);
+  data_iter += imu_data.size();
+  std::copy(gps_data.begin(), gps_data.end(), data_iter);
+  data_iter += gps_data.size();
+  std::transform(battery_data.begin(), battery_data.end(), data_iter, cast_double_lambda_function);
+  data_iter += battery_data.size();
+  std::transform(inverter_data.begin(), inverter_data.end(), data_iter, cast_double_lambda_function);
 
   return data;
 }
