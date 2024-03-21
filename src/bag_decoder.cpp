@@ -210,7 +210,7 @@ BagDecoder::BagDecoder(BagDecoderArg arg)
           arg.output_directory + "/system_stats", system_stats_header_,
           std::bind(&BagDecoder::onUpdateSystemStats, this), 0.01),
       unified_logger_(
-          arg.output_directory + "/unified_stats", unified_data_header_,
+          arg.output_directory, unified_data_header_,
           std::bind(&BagDecoder::onUpdateUnifiedData, this), 0.01) {
   // init can_rx_
   memset(&can_rx_, 0, sizeof(can_rx_));
