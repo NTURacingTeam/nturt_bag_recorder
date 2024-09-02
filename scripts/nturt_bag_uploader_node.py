@@ -2,7 +2,7 @@
 
 import paramiko
 import os
-import RPi.GPIO as GPIO
+# import RPi.GPIO as GPIO
 import rclpy
 from rclpy.node import Node
 
@@ -29,8 +29,8 @@ class BagUploader(Node):
             username=USERNAME,
             password=PASSWORD
         )
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        # GPIO.setmode(GPIO.BCM)
+        # GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         self.sftp = self.ssh_client.open_sftp()
         self.get_logger().info('bag uploader connection established successfully')
 
@@ -59,14 +59,14 @@ if __name__ == "__main__":
 
     try:
         while True:
-            if not GPIO.input(BUTTON_PIN):
-                if not pressed:
-                    bag_uploader.get_logger().info("Button Pressed, Start Uploading...")
-                    bag_uploader.run()
-                    pressed = True
+            # if not GPIO.input(BUTTON_PIN):
+            #     if not pressed:
+            bag_uploader.get_logger().info("Button Pressed, Start Uploading...")
+            bag_uploader.run()
+            pressed = True
             # button not pressed (or released)
-            else:
-                pressed = False
+            # else:
+            #     pressed = False
     except KeyboardInterrupt:
         pass
     finally:
